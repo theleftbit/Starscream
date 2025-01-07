@@ -24,17 +24,30 @@ import PackageDescription
 
 let package = Package(
         name: "Starscream",
+        platforms: [
+            .iOS(.v13),
+            .macOS(.v10_15),
+            .tvOS(.v13),
+            .watchOS(.v6)
+        ],
         products: [
             .library(name: "Starscream", targets: ["Starscream"])
         ],
-        dependencies: [],
+        dependencies: [
+            .package(url: "https://github.com/apple/swift-crypto.git", from: "3.10.0"),
+        ],
         targets: [
-            .target(name: "Starscream",
-                    path: "Sources",
-                    resources: [.copy("PrivacyInfo.xcprivacy")])
+            .target(
+                name: "Starscream",
+                dependencies: [
+                    .product(name: "Crypto", package: "swift-crypto"),
+                ],
+                path: "Sources",
+                resources: [.copy("PrivacyInfo.xcprivacy")]
+            )
         ]
 )
 
-#if os(Linux)
+#if os(Linux) || os(Android)
     package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-zlib-support.git", from: "1.0.0"))
 #endif

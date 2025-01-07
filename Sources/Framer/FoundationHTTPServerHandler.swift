@@ -32,7 +32,7 @@ public class FoundationHTTPServerHandler: HTTPServerHandler {
     }
     
     public func createResponse(headers: [String: String]) -> Data {
-        #if os(watchOS)
+        #if os(watchOS) || os(Android)
         //TODO: build response header
         return Data()
         #else
@@ -62,7 +62,7 @@ public class FoundationHTTPServerHandler: HTTPServerHandler {
     func parseContent(data: Data) -> Bool {
         var pointer = [UInt8]()
         data.withUnsafeBytes { pointer.append(contentsOf: $0) }
-        #if os(watchOS)
+        #if os(watchOS) || os(Android)
         //TODO: parse data
         return false
         #else

@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
-#if os(watchOS)
+#if os(watchOS) || os(Android)
 public typealias FoundationHTTPHandler = StringHTTPHandler
 #else
 public class FoundationHTTPHandler: HTTPHandler {

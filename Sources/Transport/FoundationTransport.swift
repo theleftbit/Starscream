@@ -134,7 +134,7 @@ public class FoundationTransport: NSObject, Transport, StreamDelegate {
     }
     
     private func getSecurityData() -> (SecTrust?, String?) {
-        #if os(watchOS)
+        #if os(watchOS) || os(Android)
         return (nil, nil)
         #else
         guard let outputStream = outputStream else {

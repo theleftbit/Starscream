@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public class WSEngine: Engine, TransportEventClient, FramerEventClient,
 FrameCollectorDelegate, HTTPHandlerDelegate {

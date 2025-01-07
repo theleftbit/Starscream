@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public enum ErrorType: Error {
     case compressionError

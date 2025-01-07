@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public protocol EngineDelegate: AnyObject {
     func didReceive(event: WebSocketEvent)

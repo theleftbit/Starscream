@@ -22,6 +22,10 @@
 
 import Foundation
 
+#if os(Android)
+public class SecTrust {}
+#endif
+
 public enum SecurityErrorCode: UInt16 {
     case acceptFailed = 1
     case pinningFailed = 2
