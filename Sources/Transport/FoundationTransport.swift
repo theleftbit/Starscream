@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public enum FoundationTransportError: Error {
     case invalidRequest
@@ -28,7 +31,7 @@ public enum FoundationTransportError: Error {
     case timeout
 }
 
-public class FoundationTransport: NSObject, Transport, StreamDelegate {
+public class FoundationTransport: NSObject, Transport, StreamDelegate, @unchecked Sendable {
     private weak var delegate: TransportEventClient?
     private let workQueue = DispatchQueue(label: "com.vluxe.starscream.websocket", attributes: [])
     private var inputStream: InputStream?

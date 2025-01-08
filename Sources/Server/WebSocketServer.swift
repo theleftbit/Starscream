@@ -27,7 +27,7 @@ import Network
 /// WebSocketServer is a Network.framework implementation of a WebSocket server
 @available(watchOS, unavailable)
 @available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)
-public class WebSocketServer: Server, ConnectionDelegate {
+public class WebSocketServer: Server, ConnectionDelegate, @unchecked Sendable {
     public var onEvent: ((ServerEvent) -> Void)?
     private var connections = [String: ServerConnection]()
     private var listener: NWListener?
@@ -88,7 +88,7 @@ public class WebSocketServer: Server, ConnectionDelegate {
 }
 
 @available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)
-public class ServerConnection: Connection, HTTPServerDelegate, FramerEventClient, FrameCollectorDelegate, TransportEventClient {
+public class ServerConnection: Connection, HTTPServerDelegate, FramerEventClient, FrameCollectorDelegate, TransportEventClient, @unchecked Sendable {
     let transport: TCPTransport
     private let httpHandler = FoundationHTTPServerHandler()
     private let framer = WSFramer(isServer: true)

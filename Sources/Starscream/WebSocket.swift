@@ -77,7 +77,7 @@ extension WebSocketClient {
     }
 }
 
-public enum WebSocketEvent {
+public enum WebSocketEvent: Sendable {
     case connected([String: String])
     case disconnected(String, UInt16)
     case text(String)
@@ -95,7 +95,7 @@ public protocol WebSocketDelegate: AnyObject {
     func didReceive(event: WebSocketEvent, client: WebSocketClient)
 }
 
-open class WebSocket: WebSocketClient, EngineDelegate {
+open class WebSocket: WebSocketClient, EngineDelegate, @unchecked Sendable {
     private let engine: Engine
     public weak var delegate: WebSocketDelegate?
     public var onEvent: ((WebSocketEvent) -> Void)?

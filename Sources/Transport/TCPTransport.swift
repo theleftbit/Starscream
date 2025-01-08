@@ -29,7 +29,7 @@ public enum TCPTransportError: Error {
 }
 
 @available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)
-public class TCPTransport: Transport {
+public class TCPTransport: Transport, @unchecked Sendable {
     private var connection: NWConnection?
     private let queue = DispatchQueue(label: "com.vluxe.starscream.networkstream", attributes: [])
     private weak var delegate: TransportEventClient?
@@ -97,8 +97,9 @@ public class TCPTransport: Transport {
     }
     
     public func write(data: Data, completion: @escaping ((Error?) -> ())) {
+        nonisolated(unsafe) let ___completion = completion
         connection?.send(content: data, completion: .contentProcessed { (error) in
-            completion(error)
+            ___completion(error)
         })
     }
     

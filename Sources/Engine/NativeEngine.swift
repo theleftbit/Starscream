@@ -26,7 +26,7 @@ import FoundationNetworking
 #endif
 
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionWebSocketDelegate {
+public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionWebSocketDelegate, @unchecked Sendable {
     private var task: URLSessionWebSocketTask?
     weak var delegate: EngineDelegate?
 
@@ -51,23 +51,25 @@ public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionW
     }
 
     public func write(string: String, completion: (() -> ())?) {
+        nonisolated(unsafe) let ___completion = completion
         task?.send(.string(string), completionHandler: { (error) in
-            completion?()
+            ___completion?()
         })
     }
 
     public func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
+        nonisolated(unsafe) let ___completion = completion
         switch opcode {
         case .binaryFrame:
             task?.send(.data(data), completionHandler: { (error) in
-                completion?()
+                ___completion?()
             })
         case .textFrame:
             let text = String(data: data, encoding: .utf8)!
             write(string: text, completion: completion)
         case .ping:
             task?.sendPing(pongReceiveHandler: { (error) in
-                completion?()
+                ___completion?()
             })
         default:
             break //unsupported

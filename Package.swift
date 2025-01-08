@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:6.0
 
 //
 //  Package.Swift
@@ -44,8 +44,10 @@ let package = Package(
                 ],
                 path: "Sources",
                 resources: [.copy("PrivacyInfo.xcprivacy")]
-            )
-        ]
+            ),
+            .testTarget(name: "StarscreamTests", dependencies: [.target(name: "Starscream")])
+        ],
+        swiftLanguageModes: [.v6]
 )
 
 #if os(Linux) || os(Android)

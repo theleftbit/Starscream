@@ -25,8 +25,7 @@ import Foundation
 import FoundationNetworking
 #endif
 
-public class WSEngine: Engine, TransportEventClient, FramerEventClient,
-FrameCollectorDelegate, HTTPHandlerDelegate {
+public class WSEngine: Engine, TransportEventClient, FramerEventClient, FrameCollectorDelegate, HTTPHandlerDelegate, @unchecked Sendable {
     private let transport: Transport
     private let framer: Framer
     private let httpHandler: HTTPHandler
@@ -114,6 +113,7 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
     }
     
     public func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
+        nonisolated(unsafe) let ___completion = completion
         writeQueue.async { [weak self] in
             guard let s = self else { return }
             s.mutex.wait()
@@ -131,8 +131,8 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
             }
             
             let frameData = s.framer.createWriteFrame(opcode: opcode, payload: sendData, isCompressed: isCompressed)
-            s.transport.write(data: frameData, completion: {_ in
-                completion?()
+            s.transport.write(data: frameData, completion: { _ in
+                ___completion?()
             })
         }
     }
