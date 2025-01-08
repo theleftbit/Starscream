@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
-#if os(Android)
-import FoundationNetworking
-#endif
+#if canImport(Darwin)
 
 public enum FoundationTransportError: Error {
     case invalidRequest
@@ -219,3 +217,4 @@ public class FoundationTransport: NSObject, Transport, StreamDelegate, @unchecke
         }
     }
 }
+#endif

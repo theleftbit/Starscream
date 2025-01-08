@@ -22,6 +22,9 @@
 
 import XCTest
 @testable import Starscream
+#if os(Android)
+import FoundationNetworking
+#endif
 
 class FuzzingTests: XCTestCase, @unchecked Sendable {
     
@@ -85,7 +88,7 @@ class FuzzingTests: XCTestCase, @unchecked Sendable {
             }
         }
         websocket.connect()
-        let result = XCTWaiter().wait(for: [e])
+        let result = XCTWaiter().wait(for: [e], timeout: timeout)
         XCTAssert(result == .completed)
     }
     

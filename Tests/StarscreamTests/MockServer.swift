@@ -22,6 +22,9 @@
 
 import Foundation
 @testable import Starscream
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public class MockConnection: Connection, HTTPServerDelegate, FramerEventClient, FrameCollectorDelegate {
     let transport: MockTransport

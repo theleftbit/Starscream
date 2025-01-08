@@ -167,6 +167,6 @@ public class TCPTransport: Transport, @unchecked Sendable {
         })
     }
 }
-#else
+#elseif os(iOS)
 typealias TCPTransport = FoundationTransport
 #endif

@@ -37,6 +37,14 @@ public class FoundationSecurity  {
 }
 
 extension FoundationSecurity: CertificatePinning {
+#if os(Android)
+    public func evaluateTrust(trust: SecTrust, domain: String?, completion: ((PinningState) -> ())) {
+        completion(.success)
+    }
+#else
+    struct CoreFoundationError: Swift.Error {
+        let error: CFError?
+    }
     public func evaluateTrust(trust: SecTrust, domain: String?, completion: ((PinningState) -> ())) {
         if allowSelfSigned {
             completion(.success)
@@ -53,9 +61,10 @@ extension FoundationSecurity: CertificatePinning {
         if SecTrustEvaluateWithError(trust, &error) {
             completion(.success)
         } else {
-            completion(.failed(error))
+            completion(.failed(CoreFoundationError.init(error: error)))
         }
     }
+#endif
 }
 
 extension FoundationSecurity: HeaderValidator {
