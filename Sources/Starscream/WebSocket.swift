@@ -47,11 +47,11 @@ public struct WSError: Error {
 public protocol WebSocketClient: AnyObject {
     func connect()
     func disconnect(closeCode: UInt16)
-    func write(string: String, completion: (() -> ())?)
-    func write(stringData: Data, completion: (() -> ())?)
-    func write(data: Data, completion: (() -> ())?)
-    func write(ping: Data, completion: (() -> ())?)
-    func write(pong: Data, completion: (() -> ())?)
+    func write(string: String, completion: (@Sendable() -> ())?)
+    func write(stringData: Data, completion: (@Sendable() -> ())?)
+    func write(data: Data, completion: (@Sendable() -> ())?)
+    func write(ping: Data, completion: (@Sendable() -> ())?)
+    func write(pong: Data, completion: (@Sendable() -> ())?)
 }
 
 //implements some of the base behaviors
@@ -142,28 +142,35 @@ open class WebSocket: WebSocketClient, EngineDelegate, @unchecked Sendable {
         engine.forceStop()
     }
     
-    public func write(data: Data, completion: (() -> ())?) {
+    public func write(data: Data, completion: (@Sendable() -> ())?) {
          write(data: data, opcode: .binaryFrame, completion: completion)
     }
     
-    public func write(string: String, completion: (() -> ())?) {
-        engine.write(string: string, completion: completion)
+    public func write(string: String, completion: (@Sendable () -> ())?) {
+        Task {
+            try await engine.write(string: string)
+            completion?()
+        }
     }
     
-    public func write(stringData: Data, completion: (() -> ())?) {
+    public func write(stringData: Data, completion: (@Sendable() -> ())?) {
         write(data: stringData, opcode: .textFrame, completion: completion)
     }
     
-    public func write(ping: Data, completion: (() -> ())?) {
+    public func write(ping: Data, completion: (@Sendable() -> ())?) {
         write(data: ping, opcode: .ping, completion: completion)
     }
     
-    public func write(pong: Data, completion: (() -> ())?) {
+    public func write(pong: Data, completion: (@Sendable() -> ())?) {
         write(data: pong, opcode: .pong, completion: completion)
     }
     
-    private func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
-        engine.write(data: data, opcode: opcode, completion: completion)
+    private func write(data: Data, opcode: FrameOpCode, completion: (@Sendable () -> ())?) {
+        Task {
+            try await engine.write(data: data, opcode: opcode)
+            completion?()
+        }
+
     }
     
     // MARK: - EngineDelegate
