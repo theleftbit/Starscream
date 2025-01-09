@@ -56,6 +56,7 @@ public class MockTransport: Transport {
     
     public func write(data: Data, completion: @escaping ((Error?) -> ())) {
         server?.write(data: data, uuid: uuid)
+        completion(nil)
     }
     
     public func received(data: Data) {
