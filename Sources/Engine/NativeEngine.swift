@@ -62,29 +62,37 @@ public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionW
             guard let text = String(data: data, encoding: .utf8) else { return }
             try await write(string: text)
         case .ping:
-            break
-//            try await task?.sendPing()
+            return try await withCheckedThrowingContinuation { continuation in
+                task?.sendPing(pongReceiveHandler: { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                })
+            }
         default:
             break //unsupported
         }
     }
     
     private func doRead() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 guard let task = self.task else { return }
                 let message = try await task.receive()
                 switch message {
                 case .string(let string):
-                    broadcast(event: .text(string))
+                    self.broadcast(event: .text(string))
                 case .data(let data):
-                    broadcast(event: .binary(data))
+                    self.broadcast(event: .binary(data))
                 @unknown default:
                     break
                 }
-                doRead() // Continue reading
+                self.doRead() // Continue reading
             } catch {
-                broadcast(event: .error(error))
+                self.broadcast(event: .error(error))
             }
         }
     }

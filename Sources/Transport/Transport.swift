@@ -58,6 +58,6 @@ public protocol Transport: AnyObject {
     func register(delegate: TransportEventClient)
     func connect(url: URL, timeout: Double, certificatePinning: CertificatePinning?)
     func disconnect()
-    func write(data: Data, completion: @escaping ((Error?) -> ()))
+    func write(data: Data, completion: @escaping (@Sendable (Error?) -> ()))
     var usingTLS: Bool { get }
 }

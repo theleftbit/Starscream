@@ -96,10 +96,9 @@ public class TCPTransport: Transport, @unchecked Sendable {
         self.delegate = delegate
     }
     
-    public func write(data: Data, completion: @escaping ((Error?) -> ())) {
-        nonisolated(unsafe) let ___completion = completion
+    public func write(data: Data, completion: @escaping (@Sendable (Error?) -> ())) {
         connection?.send(content: data, completion: .contentProcessed { (error) in
-            ___completion(error)
+            completion(error)
         })
     }
     
