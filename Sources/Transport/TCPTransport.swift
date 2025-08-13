@@ -97,7 +97,12 @@ public class TCPTransport: Transport, @unchecked Sendable {
     }
     
     public func write(data: Data, completion: @escaping (@Sendable (Error?) -> ())) {
-        connection?.send(content: data, completion: .contentProcessed { (error) in
+        guard let connection else {
+            struct NoConnectionError: Swift.Error {}
+            completion(NoConnectionError())
+            return
+        }
+        connection.send(content: data, completion: .contentProcessed { (error) in
             completion(error)
         })
     }

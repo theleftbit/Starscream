@@ -132,6 +132,8 @@ public class WSEngine: Engine, TransportEventClient, FramerEventClient, FrameCol
             let canWrite = s.canSend
             s.mutex.signal()
             if !canWrite {
+                struct CantWriteError: Swift.Error {}
+                completion?(CantWriteError())
                 return
             }
             
