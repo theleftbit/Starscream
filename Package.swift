@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:6.0
 
 //
 //  Package.Swift
@@ -23,18 +23,32 @@
 import PackageDescription
 
 let package = Package(
-        name: "Starscream",
-        products: [
-            .library(name: "Starscream", targets: ["Starscream"])
-        ],
-        dependencies: [],
-        targets: [
-            .target(name: "Starscream",
-                    path: "Sources",
-                    resources: [.copy("PrivacyInfo.xcprivacy")])
-        ]
+    name: "Starscream",
+    platforms: [
+        .iOS(.v13),
+        .macOS(.v10_15),
+        .tvOS(.v13),
+        .watchOS(.v6)
+    ],
+    products: [
+        .library(name: "Starscream", targets: ["Starscream"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.10.0"),
+    ],
+    targets: [
+        .target(
+            name: "Starscream",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+            ],
+            path: "Sources",
+            resources: [.copy("PrivacyInfo.xcprivacy")],
+            linkerSettings: [
+                .linkedLibrary("z")
+            ]
+        ),
+        .testTarget(name: "StarscreamTests", dependencies: [.target(name: "Starscream")])
+    ],
+    swiftLanguageModes: [.v6]
 )
-
-#if os(Linux)
-    package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-zlib-support.git", from: "1.0.0"))
-#endif

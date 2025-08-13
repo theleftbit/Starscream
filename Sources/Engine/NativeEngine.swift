@@ -21,79 +21,84 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionWebSocketDelegate {
+public class NativeEngine: NSObject, Engine, URLSessionDataDelegate, URLSessionWebSocketDelegate, @unchecked Sendable {
     private var task: URLSessionWebSocketTask?
     weak var delegate: EngineDelegate?
-
+    
     public func register(delegate: EngineDelegate) {
         self.delegate = delegate
     }
-
+    
     public func start(request: URLRequest) {
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
         task = session.webSocketTask(with: request)
         doRead()
         task?.resume()
     }
-
+    
     public func stop(closeCode: UInt16) {
         let closeCode = URLSessionWebSocketTask.CloseCode(rawValue: Int(closeCode)) ?? .normalClosure
         task?.cancel(with: closeCode, reason: nil)
     }
-
+    
     public func forceStop() {
         stop(closeCode: UInt16(URLSessionWebSocketTask.CloseCode.abnormalClosure.rawValue))
     }
-
-    public func write(string: String, completion: (() -> ())?) {
-        task?.send(.string(string), completionHandler: { (error) in
-            completion?()
-        })
+    
+    public func write(string: String) async throws {
+        try await task?.send(.string(string))
     }
-
-    public func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
+    
+    public func write(data: Data, opcode: FrameOpCode) async throws {
         switch opcode {
         case .binaryFrame:
-            task?.send(.data(data), completionHandler: { (error) in
-                completion?()
-            })
+            try await task?.send(.data(data))
         case .textFrame:
-            let text = String(data: data, encoding: .utf8)!
-            write(string: text, completion: completion)
+            guard let text = String(data: data, encoding: .utf8) else { return }
+            try await write(string: text)
         case .ping:
-            task?.sendPing(pongReceiveHandler: { (error) in
-                completion?()
-            })
+            return try await withCheckedThrowingContinuation { continuation in
+                task?.sendPing(pongReceiveHandler: { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                })
+            }
         default:
             break //unsupported
         }
     }
-
+    
     private func doRead() {
-        task?.receive { [weak self] (result) in
-            switch result {
-            case .success(let message):
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                guard let task = self.task else { return }
+                let message = try await task.receive()
                 switch message {
                 case .string(let string):
-                    self?.broadcast(event: .text(string))
+                    self.broadcast(event: .text(string))
                 case .data(let data):
-                    self?.broadcast(event: .binary(data))
+                    self.broadcast(event: .binary(data))
                 @unknown default:
                     break
                 }
-                break
-            case .failure(let error):
-                self?.broadcast(event: .error(error))
-                return
+                self.doRead() // Continue reading
+            } catch {
+                self.broadcast(event: .error(error))
             }
-            self?.doRead()
         }
     }
-
+    
     private func broadcast(event: WebSocketEvent) {
-        delegate?.didReceive(event: event)
+        self.delegate?.didReceive(event: event)
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {

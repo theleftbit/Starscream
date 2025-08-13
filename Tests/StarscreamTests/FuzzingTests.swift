@@ -22,8 +22,11 @@
 
 import XCTest
 @testable import Starscream
+#if os(Android)
+import FoundationNetworking
+#endif
 
-class FuzzingTests: XCTestCase {
+class FuzzingTests: XCTestCase, @unchecked Sendable {
     
     var websocket: WebSocket!
     var server: MockServer!
@@ -85,11 +88,8 @@ class FuzzingTests: XCTestCase {
             }
         }
         websocket.connect()
-        waitForExpectations(timeout: timeout) { error in
-            if let error = error {
-                XCTFail("waitForExpectationsWithTimeout errored: \(error)")
-            }
-        }
+        let result = XCTWaiter().wait(for: [e], timeout: timeout)
+        XCTAssert(result == .completed)
     }
     
     func sendMessage(string: String, isBinary: Bool) {
