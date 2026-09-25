@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
 public protocol EngineDelegate: AnyObject {
     func didReceive(event: WebSocketEvent)
@@ -31,6 +34,6 @@ public protocol Engine {
     func start(request: URLRequest)
     func stop(closeCode: UInt16)
     func forceStop()
-    func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?)
-    func write(string: String, completion: (() -> ())?)
+    func write(data: Data, opcode: FrameOpCode) async throws
+    func write(string: String) async throws
 }

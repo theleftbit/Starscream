@@ -2,6 +2,13 @@
 
 Starscream is a conforming WebSocket ([RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455)) library in Swift.
 
+## Android fork requirements
+
+The `android` branch requires Swift 6.2 or later and swift-crypto 5.x.
+Its WebSocket handshake validation uses `Crypto.Insecure.SHA1` on Apple and
+Android platforms. The 5.x requirement aligns with BSWFoundation 26.9.0;
+clients that require swift-crypto 3.x must update their dependency constraints.
+
 ## Features
 
 - Conforms to all of the base [Autobahn test suite](https://crossbar.io/autobahn/).

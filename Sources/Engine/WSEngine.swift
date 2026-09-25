@@ -21,9 +21,11 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 import Foundation
+#if os(Android)
+import FoundationNetworking
+#endif
 
-public class WSEngine: Engine, TransportEventClient, FramerEventClient,
-FrameCollectorDelegate, HTTPHandlerDelegate {
+public class WSEngine: Engine, TransportEventClient, FramerEventClient, FrameCollectorDelegate, HTTPHandlerDelegate, @unchecked Sendable {
     private let transport: Transport
     private let framer: Framer
     private let httpHandler: HTTPHandler
@@ -91,10 +93,11 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
         var pointer = [UInt8](repeating: 0, count: capacity)
         writeUint16(&pointer, offset: 0, value: closeCode)
         let payload = Data(bytes: pointer, count: MemoryLayout<UInt16>.size)
-        write(data: payload, opcode: .connectionClose, completion: { [weak self] in
+        Task { [weak self] in
+            try await self?.write(data: payload, opcode: .connectionClose)
             self?.reset()
             self?.forceStop()
-        })
+        }
     }
     
     public func forceStop() {
@@ -105,18 +108,32 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
         transport.disconnect()
     }
     
-    public func write(string: String, completion: (() -> ())?) {
+    public func write(string: String) async throws {
         let data = string.data(using: .utf8)!
-        write(data: data, opcode: .textFrame, completion: completion)
+        try await write(data: data, opcode: .textFrame)
     }
     
-    public func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
+    public func write(data: Data, opcode: FrameOpCode) async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            write(data: data, opcode: opcode, completion: { error in
+                if let error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume(returning: ())
+                }
+            })
+        }
+    }
+
+    private func write(data: Data, opcode: FrameOpCode, completion: (@Sendable (Error?) -> ())?) {
         writeQueue.async { [weak self] in
             guard let s = self else { return }
             s.mutex.wait()
             let canWrite = s.canSend
             s.mutex.signal()
             if !canWrite {
+                struct CantWriteError: Swift.Error {}
+                completion?(CantWriteError())
                 return
             }
             
@@ -128,8 +145,8 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
             }
             
             let frameData = s.framer.createWriteFrame(opcode: opcode, payload: sendData, isCompressed: isCompressed)
-            s.transport.write(data: frameData, completion: {_ in
-                completion?()
+            s.transport.write(data: frameData, completion: { error in
+                completion?(error)
             })
         }
     }

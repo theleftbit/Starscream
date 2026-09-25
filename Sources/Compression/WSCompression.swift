@@ -128,7 +128,7 @@ class Decompressor {
     }
 
     func decompress(_ data: Data, finish: Bool) throws -> Data {
-        return try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Data in
+        return try data.starStreamWithUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Data in
             return try decompress(bytes: bytes, count: data.count, finish: finish)
         }
     }
@@ -215,7 +215,7 @@ class Compressor {
 
         var compressed = Data()
         var res: CInt = 0
-        data.withUnsafeBytes { (ptr:UnsafePointer<UInt8>) -> Void in
+        data.starStreamWithUnsafeBytes { (ptr:UnsafePointer<UInt8>) -> Void in
             strm.next_in = UnsafeMutablePointer<UInt8>(mutating: ptr)
             strm.avail_in = CUnsignedInt(data.count)
 
